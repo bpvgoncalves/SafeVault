@@ -1,4 +1,4 @@
-# safevault - Secure Data Storage
+# SafeVault - Secure Data Storage
 # Copyright (C) 2023  Bruno Gonçalves
 #
 # This program is free software: you can redistribute it and/or modify
@@ -33,6 +33,8 @@ init <- function(vault_path = NULL, key_size = 8192) {
 
   if (is.null(vault_path)) stop("Invalid vault path.")
 
+  # TODO: Use proper key derivation
+  # TODO: Use password salt
   pass <- openssl::sha512(askpass::askpass("Please enter vault password:"))
   if (pass != openssl::sha512(askpass::askpass("Please confirm vault password:"))) {
     stop("Passwords do not match!")
@@ -51,4 +53,44 @@ init <- function(vault_path = NULL, key_size = 8192) {
   openssl::write_pem(key$pubkey, paste0(vault_path, "/.meta/pub"))
   rm(key, pass)
   return()
+}
+
+
+
+vault_manager <- function(vault_path = NULL) {
+
+  if (is.null(vault_path)) stop("Invalid vault path.")
+
+  pub_key <- openssl::read_pubkey(paste0(vault_path, "/.meta/pub"))[[1]]
+
+  read_vault <- function () {
+    dir(vault_path, include.dirs = FALSE)
+  }
+
+  item_store <- function(item) {
+    name <- item$title
+    item <- openssl::encrypt_envelope(serialize(item, NULL),
+                                      pubkey = pub_key)
+    saveRDS(item, file = paste0(vault_path, "/", name), compress = TRUE)
+    return()
+  }
+
+  item_read <- function(name) {
+
+    item <- readRDS(paste0(vault_path, "/", name))
+
+    psw <- openssl::sha512(askpass::askpass("Please enter vault password:"))
+    item <- openssl::decrypt_envelope(item$data,
+                                      item$iv,
+                                      item$session,
+                                      openssl::read_key(paste0(vault_path, "/.meta/prv"), psw),
+                                      psw)
+    rm(psw)
+    unserialize(item)
+  }
+
+
+  return(list(read_vault = read_vault,
+              item_store = item_store))
+
 }
