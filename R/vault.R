@@ -87,7 +87,7 @@ vault_manager <- function(vault_path = NULL) {
 
   item_read <- function(name) {
 
-    kdf <- argon2::argon2_kdf(askpass::askpass("Please enter vault password:"),
+    kdf <- argon2::argon2_kdf(openssl::askpass("Please enter vault password:"),
                               keys$salt)
     item <- readRDS(paste0(vault_path, "/", name))
     item <- openssl::decrypt_envelope(item$data,
