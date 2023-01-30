@@ -34,6 +34,14 @@
 #' @export
 item_pass.simple <- function(title, url = NULL, username = NULL, password = NULL) {
 
+  if(is.null(username)) {
+    message("Username is NULL. Proceed with caution.")
+  }
+  if(is.null(password)) {
+    message("Password is NULL. Proceed with caution.")
+  }
+  class(password) <- "password"
+
   out <- list(title = title,
               url = url,
               username = username,

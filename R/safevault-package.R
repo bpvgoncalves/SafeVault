@@ -13,3 +13,9 @@
 #' @importFrom openssl write_pem
 ## usethis namespace: end
 NULL
+
+
+#' @export
+print.password <- function(x, ...) {
+  print("**********")
+}
