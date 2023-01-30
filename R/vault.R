@@ -109,6 +109,11 @@ vault_manager <- function(vault_path = NULL) {
                     FROM item")
   }
 
+  close_vault <- function() {
+
+    DBI::dbDisconnect(db)
+  }
+
   item_store <- function(item) {
     name <- item$title
     type <- class(item)[1]
@@ -153,6 +158,7 @@ vault_manager <- function(vault_path = NULL) {
 
 
   return(list(read_vault = read_vault,
+              close_vault = close_vault,
               item_store = item_store,
               item_read = item_read))
 
