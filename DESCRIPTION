@@ -13,6 +13,6 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Imports: 
-    askpass,
+    argon2 (>= 0.7.0),
     lifecycle,
     openssl

@@ -33,10 +33,10 @@ init <- function(vault_path = NULL, key_size = 8192) {
 
   if (is.null(vault_path)) stop("Invalid vault path.")
 
-  # TODO: Use proper key derivation
-  # TODO: Use password salt
-  pass <- openssl::sha512(askpass::askpass("Please enter vault password:"))
-  if (pass != openssl::sha512(askpass::askpass("Please confirm vault password:"))) {
+  key <- argon2::argon2_kdf(openssl::askpass("Please enter vault password:"))
+  if (!identical(key,
+                 argon2::argon2_kdf(openssl::askpass("Please confirm vault password:"),
+                                    key$salt))) {
     stop("Passwords do not match!")
   }
 
@@ -47,11 +47,18 @@ init <- function(vault_path = NULL, key_size = 8192) {
     stop("Path already exists.")
   }
 
+  salt <- key$salt
+  saveRDS(salt, paste0(vault_path, "/.meta/slt"))
+  rm(salt)
+
   cat("Creating keypair. This may take a while...\n")
-  key <- openssl::rsa_keygen(key_size)
-  openssl::write_pem(key, paste0(vault_path, "/.meta/prv"), password = pass)
-  openssl::write_pem(key$pubkey, paste0(vault_path, "/.meta/pub"))
-  rm(key, pass)
+  rsakey <- openssl::rsa_keygen(key_size)
+  openssl::write_pem(rsakey,
+                     paste0(vault_path, "/.meta/prv"),
+                     password = paste0(key$key, collapse = ""))
+  openssl::write_pem(rsakey$pubkey,
+                     paste0(vault_path, "/.meta/pub"))
+  rm(rsakey, key)
   return()
 }
 
@@ -61,7 +68,10 @@ vault_manager <- function(vault_path = NULL) {
 
   if (is.null(vault_path)) stop("Invalid vault path.")
 
-  pub_key <- openssl::read_pubkey(paste0(vault_path, "/.meta/pub"))[[1]]
+  keys <- new.env(TRUE, emptyenv())
+
+  keys$pub_key <- openssl::read_pubkey(paste0(vault_path, "/.meta/pub"))
+  keys$salt <- readRDS(paste0(vault_path, "/.meta/slt"))
 
   read_vault <- function () {
     dir(vault_path, include.dirs = FALSE)
@@ -70,23 +80,23 @@ vault_manager <- function(vault_path = NULL) {
   item_store <- function(item) {
     name <- item$title
     item <- openssl::encrypt_envelope(serialize(item, NULL),
-                                      pubkey = pub_key)
+                                      pubkey = keys$pub_key)
     saveRDS(item, file = paste0(vault_path, "/", name), compress = TRUE)
     return()
   }
 
   item_read <- function(name) {
 
+    kdf <- argon2::argon2_kdf(askpass::askpass("Please enter vault password:"),
+                              keys$salt)
     item <- readRDS(paste0(vault_path, "/", name))
-
-    psw <- openssl::sha512(askpass::askpass("Please enter vault password:"))
     item <- openssl::decrypt_envelope(item$data,
                                       item$iv,
                                       item$session,
-                                      openssl::read_key(paste0(vault_path, "/.meta/prv"), psw),
-                                      psw)
-    rm(psw)
-    unserialize(item)
+                                      paste0(vault_path, "/.meta/prv"),
+                                      password = paste0(kdf$key, collapse = ""))
+    rm(kdf)
+    return(unserialize(item))
   }
 
 
