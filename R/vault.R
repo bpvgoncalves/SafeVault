@@ -15,8 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#' New Vault Init
-#' `r lifecycle::badge('experimental')`
+#' New Vault Init   `r lifecycle::badge('experimental')`
 #'
 #' Initialize new vault
 #'
@@ -26,8 +25,6 @@
 #' @return NULL
 
 #' @export
-#'
-
 init <- function(vault_path = NULL, key_size = 8192) {
   cat("Initializing Vault\n")
 
@@ -64,6 +61,16 @@ init <- function(vault_path = NULL, key_size = 8192) {
 
 
 
+#' Vault Manager   `r lifecycle::badge('experimental')`
+#'
+#' Manages the safe vault folder
+#'
+#' @param vault_path  Path to vault folder
+#'
+#' @return
+#' Vault Manager enclosure
+#'
+#' @export
 vault_manager <- function(vault_path = NULL) {
 
   if (is.null(vault_path)) stop("Invalid vault path.")
@@ -101,6 +108,7 @@ vault_manager <- function(vault_path = NULL) {
 
 
   return(list(read_vault = read_vault,
-              item_store = item_store))
+              item_store = item_store,
+              item_read = item_read))
 
 }

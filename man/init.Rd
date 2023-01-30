@@ -2,8 +2,7 @@
 % Please edit documentation in R/vault.R
 \name{init}
 \alias{init}
-\title{New Vault Init
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}}
+\title{New Vault Init   \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}}
 \usage{
 init(vault_path = NULL, key_size = 8192)
 }
