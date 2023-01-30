@@ -26,10 +26,27 @@
 
 #' @export
 vault_init <- function(vault_path = NULL, key_size = 8192) {
-  cat("Initializing Vault\n")
+  cat("Initializing Vault DB\n")
 
   if (is.null(vault_path)) stop("Invalid vault path.")
+  if (!file.exists(vault_path)) {
+    db <- DBI::dbConnect(RSQLite::SQLite(), vault_path)
+    DBI::dbExecute(db,
+                   "CREATE TABLE metadata (
+                   md_key TEXT NOT NULL,
+                   md_value TEXT NOT NULL,
+                   CONSTRAINT metadata_PK PRIMARY KEY (md_key));")
+    DBI::dbExecute(db,
+                   "CREATE TABLE item (
+                   item_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                   item_title TEXT NOT NULL,
+                   item_type TEXT NOT NULL,
+                   item BLOB NOT NULL);")
+  } else {
+    stop("Path already exists. Try open a Vault Manager or change the path.")
+  }
 
+  cat("Deriving key from password. Please be patient!\n")
   key <- argon2::argon2_kdf(openssl::askpass("Please enter vault password:"))
   if (!identical(key,
                  argon2::argon2_kdf(openssl::askpass("Please confirm vault password:"),
@@ -37,26 +54,23 @@ vault_init <- function(vault_path = NULL, key_size = 8192) {
     stop("Passwords do not match!")
   }
 
-  if (!dir.exists(vault_path)) {
-    dir.create(vault_path)
-    dir.create(paste0(vault_path, "/.meta"))
-  } else {
-    stop("Path already exists.")
-  }
-
-  salt <- key$salt
-  saveRDS(salt, paste0(vault_path, "/.meta/slt"))
-  rm(salt)
+  q <- DBI::dbSendStatement(db, "INSERT INTO metadata (md_key, md_value) VALUES (:k, :v);")
+  DBI::dbBind(q, params = list(k = "salt",
+                               v = openssl::base64_encode(key$salt)))
 
   cat("Creating keypair. This may take a while...\n")
   rsakey <- openssl::rsa_keygen(key_size)
-  openssl::write_pem(rsakey,
-                     paste0(vault_path, "/.meta/prv"),
-                     password = paste0(key$key, collapse = ""))
-  openssl::write_pem(rsakey$pubkey,
-                     paste0(vault_path, "/.meta/pub"))
-  rm(rsakey, key)
-  return()
+  DBI::dbBind(q, params = list(k = "prv",
+                               v = openssl::write_pem(rsakey,
+                                                      NULL,
+                                                      password = paste0(key$key, collapse = ""))))
+  DBI::dbBind(q, params = list(k = "pub",
+                               v = openssl::write_pem(rsakey$pubkey,
+                                                      NULL)))
+  DBI::dbClearResult(q)
+  DBI::dbDisconnect(db)
+  rm(rsakey, key, db, q)
+  return(0)
 }
 
 
@@ -77,32 +91,63 @@ vault_manager <- function(vault_path = NULL) {
 
   keys <- new.env(TRUE, emptyenv())
 
-  keys$pub_key <- openssl::read_pubkey(paste0(vault_path, "/.meta/pub"))
-  keys$salt <- readRDS(paste0(vault_path, "/.meta/slt"))
+  db <- DBI::dbConnect(RSQLite::SQLite(), vault_path)
+
+  keys$salt <- openssl::base64_decode(DBI::dbGetQuery(db,
+                                                      "SELECT md_value
+                                                      FROM metadata
+                                                      WHERE md_key='salt'")[[1]])
+  keys$pub_key <- openssl::read_pubkey(DBI::dbGetQuery(db,
+                                                       "SELECT md_value
+                                                       FROM metadata
+                                                       WHERE md_key='pub'")[[1]])
+
 
   read_vault <- function () {
-    dir(vault_path, include.dirs = FALSE)
+    DBI::dbGetQuery(db,
+                    "SELECT item_title
+                    FROM item")
   }
 
   item_store <- function(item) {
     name <- item$title
+    type <- class(item)[1]
     item <- openssl::encrypt_envelope(serialize(item, NULL),
                                       pubkey = keys$pub_key)
-    saveRDS(item, file = paste0(vault_path, "/", name), compress = TRUE)
-    return()
+
+    q <- DBI::dbSendStatement(db,
+                              "INSERT INTO item (item_title, item_type, item)
+                              VALUES
+                              (:ttl, :type, :item)")
+    df <- data.frame(item = I(serialize(item, NULL)))
+    DBI::dbBind(q, params = list(ttl = "name",
+                                 type = type,
+                                 item = df))
+    DBI::dbClearResult(q)
+    rm(q, df, item)
+    return(0)
   }
 
   item_read <- function(name) {
 
     kdf <- argon2::argon2_kdf(openssl::askpass("Please enter vault password:"),
                               keys$salt)
-    item <- readRDS(paste0(vault_path, "/", name))
+    q <- DBI::dbSendQuery(db,
+                          "SELECT item
+                          FROM item
+                          WHERE item_title = :ttl;")
+    DBI::dbBind(q, params = list(ttl = name))
+    item <- unserialize(DBI::dbFetch(q)$item[[1]])
     item <- openssl::decrypt_envelope(item$data,
                                       item$iv,
                                       item$session,
-                                      paste0(vault_path, "/.meta/prv"),
+                                      DBI::dbGetQuery(db,
+                                                      "SELECT md_value
+                                                       FROM metadata
+                                                       WHERE md_key='prv'")[[1]],
                                       password = paste0(kdf$key, collapse = ""))
-    rm(kdf)
+    DBI::dbClearResult(q)
+    rm(q, kdf)
     return(unserialize(item))
   }
 
