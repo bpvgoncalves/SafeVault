@@ -25,7 +25,7 @@
 #' @return NULL
 
 #' @export
-init <- function(vault_path = NULL, key_size = 8192) {
+vault_init <- function(vault_path = NULL, key_size = 8192) {
   cat("Initializing Vault\n")
 
   if (is.null(vault_path)) stop("Invalid vault path.")
