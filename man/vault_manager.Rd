@@ -4,14 +4,17 @@
 \alias{vault_manager}
 \title{Vault Manager   \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}}
 \usage{
-vault_manager(vault_path = NULL)
+vault_manager(vault_path = NULL, strict = FALSE)
 }
 \arguments{
-\item{vault_path}{Path to vault folder}
+\item{vault_path}{Path to vault file}
+
+\item{strict}{Boolean. If TRUE the password will be requested every time an item is read
+from the vault.}
 }
 \value{
 Vault Manager enclosure
 }
 \description{
-Manages the safe vault folder
+Manages the safe vault file
 }

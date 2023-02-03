@@ -7,9 +7,9 @@
 vault_init(vault_path = NULL, key_size = 8192)
 }
 \arguments{
-\item{vault_path}{Path to vault folder}
+\item{vault_path}{Path to vault file}
 
-\item{key_size}{Size for RSA private key (Default: 8192)}
+\item{key_size}{Size for RSA key (Default: 8192 bits)}
 }
 \description{
 Initialize new vault
