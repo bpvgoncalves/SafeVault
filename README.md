@@ -11,9 +11,17 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 ![GitHub](https://img.shields.io/github/license/bpvgoncalves/SafeVault?color=black)
 ![GitHub R package
 version](https://img.shields.io/github/r-package/v/bpvgoncalves/SafeVault?color=black&label=Version%20GitHub)
+
 <!-- badges: end -->
 
-SafeVault is aimed at secure storage of data.
+SafeVault is aimed at secure storage of data. It started as a way to
+store passwords locally, but it can be used to store several types of
+items.
+
+Some helper functions are included to allow creation and processing of
+specific types of items such as password or credit card information, but
+anything that can be created or loaded into R can potentially be stored
+inside the vault.
 
 ## Installation
 
