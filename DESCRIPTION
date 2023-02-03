@@ -1,6 +1,6 @@
 Package: safevault
 Title: Secure Data Storage
-Version: 0.1.0.9000
+Version: 0.1.0.9001
 Authors@R: 
     person("Bruno", 
            "Gonçalves", 
@@ -17,7 +17,8 @@ Imports:
     DBI,
     lifecycle,
     openssl,
-    RSQLCipher
+    RSQLCipher,
+    utils
 Remotes:
     bpvgoncalves/argon2,
     bpvgoncalves/RSQLCipher

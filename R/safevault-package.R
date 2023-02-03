@@ -24,6 +24,7 @@
 #' @importFrom openssl write_pem
 #' @importFrom RSQLCipher dbChangeKey
 #' @importFrom RSQLCipher SQLite
+#' @importFrom utils tail
 ## usethis namespace: end
 NULL
 
@@ -31,4 +32,15 @@ NULL
 #' @export
 print.password <- function(x, ...) {
   print("**********")
+}
+
+#' @export
+print.cc_number <- function(x, ...) {
+  print(paste0("**** ",
+               paste0(tail(strsplit(x, "")[[1]], 4), collapse = "")))
+}
+
+#' @export
+print.cc_ccv <- function(x, ...) {
+  print("***")
 }
