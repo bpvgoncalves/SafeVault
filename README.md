@@ -8,6 +8,9 @@
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![R-CMD-check](https://github.com/bpvgoncalves/SafeVault/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bpvgoncalves/SafeVault/actions/workflows/R-CMD-check.yaml)
+![GitHub](https://img.shields.io/github/license/bpvgoncalves/SafeVault?color=black)
+![GitHub R package
+version](https://img.shields.io/github/r-package/v/bpvgoncalves/SafeVault?color=black&label=Version%20GitHub)
 <!-- badges: end -->
 
 SafeVault is aimed at secure storage of data.
