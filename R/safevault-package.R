@@ -2,7 +2,18 @@
 "_PACKAGE"
 
 ## usethis namespace: start
+#' @importFrom argon2 argon2_hash
 #' @importFrom argon2 argon2_kdf
+#' @importFrom argon2 blake2b
+#' @importFrom argon2 raw_as_char
+#' @importFrom DBI dbBind
+#' @importFrom DBI dbClearResult
+#' @importFrom DBI dbConnect
+#' @importFrom DBI dbDisconnect
+#' @importFrom DBI dbExecute
+#' @importFrom DBI dbGetQuery
+#' @importFrom DBI dbSendQuery
+#' @importFrom DBI dbSendStatement
 #' @importFrom lifecycle deprecated
 #' @importFrom openssl askpass
 #' @importFrom openssl decrypt_envelope
@@ -11,6 +22,8 @@
 #' @importFrom openssl read_pubkey
 #' @importFrom openssl rsa_keygen
 #' @importFrom openssl write_pem
+#' @importFrom RSQLCipher dbChangeKey
+#' @importFrom RSQLCipher SQLite
 ## usethis namespace: end
 NULL
 
