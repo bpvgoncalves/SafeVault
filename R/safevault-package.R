@@ -44,3 +44,11 @@ print.cc_number <- function(x, ...) {
 print.cc_ccv <- function(x, ...) {
   print("***")
 }
+
+#' @export
+print.card_number <- function(x, ...) {
+  print(gsub(" $",
+             "",
+             gsub("(.{4})", "\\1 ", as.character(x))))
+}
+
